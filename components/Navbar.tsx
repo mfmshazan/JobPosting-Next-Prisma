@@ -37,9 +37,9 @@ export default function Navbar() {
                                 <Link href="/dashboard" className="text-sm text-gray-600 dark:text-gray-300 hover:underline">
                                     Dashboard
                                 </Link>
-                                
+
                                 <button
-                                    onClick={logout}
+                                    onClick={() => logout()}
                                     className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                                 >
                                     Sign Out
