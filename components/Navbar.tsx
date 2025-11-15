@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 import Image from "next/image"
 
@@ -29,9 +31,9 @@ export default function Navbar() {
                         <Link href="/dashboard" className="text-sm text-gray-600 dark:text-gray-300 hover:underline">
                             Dashboard
                         </Link>
-                                    <Link href="/auth/signin" className="text-sm bg-gray-900 text-white px-3 py-1 rounded-md hover:bg-gray-800 dark:bg-white dark:text-black">
-                                        Sign In
-                                    </Link>
+                        <Link href="/auth/signin" className="text-sm bg-gray-900 text-white px-3 py-1 rounded-md hover:bg-gray-800 dark:bg-white dark:text-black">
+                            Sign In
+                        </Link>
                     </div>
                 </div>
             </div>
