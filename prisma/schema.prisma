@@ -67,7 +67,7 @@ model Job {
   location String
   type String
   description String @db.Text
-  salry String?
+  salary String?
 
   postedAt DateTime @default(now())
   postedBy User @relation("PostedJobs", fields:[postedById], references:[id])

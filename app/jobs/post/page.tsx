@@ -18,14 +18,20 @@ export default function PostJobPage() {
         }
 
         try{
-            await fetch("/api/jobs", {
+            const response = await fetch("/api/jobs", {
                 method: "POST",
                 headers:{
-                    "Conext-Type" : "application/json", 
+                    "Content-Type" : "application/json", 
                 },
                 body: JSON.stringify(data)
             })
-            window.location.href = "/jobs"
+            
+            if (response.ok) {
+                window.location.href = "/jobs"
+            } else {
+                const error = await response.json()
+                alert(error.message || "Failed to post job")
+            }
         }
         catch(error){
             console.log(error)
@@ -76,11 +82,23 @@ export default function PostJobPage() {
                     </div>
 
                     <div>
+                        <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location</label>
+                        <input
+                            type="text"
+                            name="location"
+                            id="location"
+                            required
+                            className="w-full rounded-md border border-gray-200 dark:border-gray-700 px-3 py-2 bg-transparent text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                    </div>
+
+                    <div>
                         <label htmlFor="salary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Salary (optional)</label>
                         <input
                             type="text"
                             name="salary"
                             id="salary"
+                            placeholder="e.g. $50,000 - $80,000"
                             className="w-full rounded-md border border-gray-200 dark:border-gray-700 px-3 py-2 bg-transparent text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                     </div>
