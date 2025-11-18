@@ -1,8 +1,31 @@
 import { prisma } from "@/lib/prisma"
 
-export default async function JobsPage() {
+export default async function JobsPage({searchParams,
+}:{
+    searchParams : Promise<{[key: string] : string | string[] | undefined}>
+}) {
 
+    const {q, type, location} = await searchParams;
+    const query = q as string | undefined
+    const searchType = type as string | undefined
+    const searchLocation = location as string | undefined
     const jobs = await prisma.job.findMany({
+
+        where:{
+            AND:[
+                query? {
+                    OR:[
+                    {title: {contains:query, mode: "insensitive"}},
+                    {company: {contains:query, mode: "insensitive"}},
+                    {description: {contains:query, mode: "insensitive"}},
+                ]
+                }
+                :{},
+
+                type? {type: searchType}: {},
+                searchLocation ? {location: {contains: searchLocation, mode:"insensitive"}} : {}
+            ],
+        },
         include: {
             postedBy: {
                 select: {
