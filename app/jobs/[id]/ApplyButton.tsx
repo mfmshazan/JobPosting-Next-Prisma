@@ -55,7 +55,7 @@ export default function ApplyButton({ jobId }: { jobId: string }) {
                 Apply for this position
             </button>
             {applicationStatus === "error" && (
-                <p>{errorMessage}</p>
+                <p className="">{errorMessage}</p>
             )}
         </>
     )

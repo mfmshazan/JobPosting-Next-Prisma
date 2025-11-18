@@ -25,28 +25,28 @@ export default function Navbar() {
                         </span>
                     </Link>
 
-                    <div className="hidden sm:flex items-center gap-4">
-                        <Link href="/jobs" className="text-sm text-gray-600 dark:text-gray-300 hover:underline">
-                            Browse Jobs
+                    <div className="hidden sm:flex items-center gap-8">
+                        <Link href="/jobs" className="text-sm text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 font-medium">
+                            Jobs
                         </Link>
                         {session ? (
                             <>
-                                <Link href="/jobs/post" className="text-sm text-gray-600 dark:text-gray-300 hover:underline">
+                                <Link href="/jobs/post" className="text-sm text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 font-medium">
                                     Post Job
                                 </Link>
-                                <Link href="/dashboard" className="text-sm text-gray-600 dark:text-gray-300 hover:underline">
+                                <Link href="/dashboard" className="text-sm text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 font-medium">
                                     Dashboard
                                 </Link>
 
                                 <button
                                     onClick={() => logout()}
-                                    className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                                    className="text-sm text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 px-4 py-2 rounded-md font-medium transition-all duration-200 hover:bg-red-50 dark:hover:bg-red-900/20"
                                 >
                                     Sign Out
                                 </button>
                             </>
                         ) : (
-                            <Link href="/auth/signin" className="text-sm bg-gray-900 text-white px-3 py-1 rounded-md hover:bg-gray-800 dark:bg-white dark:text-black">
+                            <Link href="/auth/signin" className="text-sm bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-all duration-200 font-medium hover:shadow-lg transform hover:scale-105">
                                 Sign In
                             </Link>
                         )}
