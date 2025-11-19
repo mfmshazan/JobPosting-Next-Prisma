@@ -4,7 +4,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
 export async function POST(request: Request,
-    { params }: { params: { jobId: string } }
+    { params }: { params: { id: string } }
 ) {
 
     const session = await auth()
@@ -14,9 +14,9 @@ export async function POST(request: Request,
     }
 
     try {
-        const { jobId } = await params;
+        const { id } = await params;
         const job = await prisma.job.findUnique({
-            where: { id: jobId }
+            where: { id }
         })
 
         if(!job){
@@ -62,4 +62,4 @@ export async function GET(request: Request) {
         console.log("Error in creating job", error)
         return new NextResponse("Internal server error", { status: 500 })
     }
-}  
+}
