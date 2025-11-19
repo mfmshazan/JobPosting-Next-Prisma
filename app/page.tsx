@@ -64,24 +64,13 @@ export default async function Home({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50">
-      {/* Hero Section with Search */}
+      {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center animate-fade-in mb-12">
+        <div className="animate-fade-in mb-12">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4 animate-slide-up">
-            Find Your Dream Job
-            <span className="block text-[#6C5DD3] mt-2">Today</span>
+            Find Your Dream Job <span className="text-[#6C5DD3]">Today</span>
           </h1>
-          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto animate-slide-up" style={{animationDelay: '0.1s'}}>
-            Discover thousands of job opportunities with all the information you need.
-          </p>
         </div>
-
-        {/* Search Bar Component */}
-        <SearchBar 
-          initialSearch={searchParams.search} 
-          initialLocation={searchParams.location}
-          initialType={searchParams.type}
-        />
 
         {/* Jobs Section */}
         <div className="mt-16">
