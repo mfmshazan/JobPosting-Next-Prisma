@@ -1,108 +1,197 @@
 import Link from "next/link";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import { formatDistanceToNow } from "date-fns";
+import SearchBar from "@/components/SearchBar";
+import StarButton from "@/components/StarButton";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: { search?: string; location?: string; type?: string };
+}) {
   const session = await auth();
+  
+  // Get current user if logged in
+  let currentUser = null;
+  if (session?.user?.email) {
+    currentUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+  }
+  
+  // Build search query
+  const whereClause: any = {};
+  
+  if (searchParams.search) {
+    whereClause.OR = [
+      { title: { contains: searchParams.search, mode: 'insensitive' } },
+      { company: { contains: searchParams.search, mode: 'insensitive' } },
+      { description: { contains: searchParams.search, mode: 'insensitive' } },
+    ];
+  }
+  
+  if (searchParams.location) {
+    whereClause.location = { contains: searchParams.location, mode: 'insensitive' };
+  }
+  
+  if (searchParams.type) {
+    whereClause.type = searchParams.type;
+  }
+
+  // Fetch jobs from database
+  const jobs = await prisma.job.findMany({
+    where: whereClause,
+    orderBy: {
+      postedAt: 'desc'
+    },
+    take: 12,
+    include: {
+      _count: {
+        select: { applications: true }
+      }
+    }
+  });
+
+  // Get starred job IDs for current user
+  let starredJobIds: string[] = [];
+  if (currentUser) {
+    const starredJobs = await prisma.$queryRaw<Array<{ jobId: string }>>`
+      SELECT "jobId" FROM "StarredJob" WHERE "userId" = ${currentUser.id}
+    `;
+    starredJobIds = starredJobs.map((s: any) => s.jobId);
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950">
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center animate-fade-in">
-          <h1 className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6 animate-slide-up">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50">
+      {/* Hero Section with Search */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center animate-fade-in mb-12">
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4 animate-slide-up">
             Find Your Dream Job
-            <span className="block text-indigo-600 dark:text-indigo-400 mt-2">Today</span>
+            <span className="block text-[#6C5DD3] mt-2">Today</span>
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto animate-slide-up" style={{animationDelay: '0.1s'}}>
-            Discover thousands of job opportunities with all the information you need. It's your future.
+          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto animate-slide-up" style={{animationDelay: '0.1s'}}>
+            Discover thousands of job opportunities with all the information you need.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slide-up" style={{animationDelay: '0.2s'}}>
-            <Link
-              href="/jobs"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-lg font-semibold transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              Browse Jobs
-            </Link>
-            {session ? (
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-xl text-lg font-semibold border-2 border-gray-200 dark:border-gray-700 transition-all duration-300 hover:scale-105 hover:shadow-xl"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                </svg>
-                Go to Dashboard
-              </Link>
-            ) : (
-              <Link
-                href="/auth/signin"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-xl text-lg font-semibold border-2 border-gray-200 dark:border-gray-700 transition-all duration-300 hover:scale-105 hover:shadow-xl"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                </svg>
-                Sign In to Post Jobs
-              </Link>
-            )}
-          </div>
         </div>
 
-        {/* Features Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-24">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 animate-slide-up" style={{animationDelay: '0.3s'}}>
-            <div className="bg-indigo-100 dark:bg-indigo-900/30 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
-              <svg className="w-8 h-8 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
+        {/* Search Bar Component */}
+        <SearchBar 
+          initialSearch={searchParams.search} 
+          initialLocation={searchParams.location}
+          initialType={searchParams.type}
+        />
+
+        {/* Jobs Section */}
+        <div className="mt-16">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">
+                {searchParams.search || searchParams.location || searchParams.type 
+                  ? 'Search Results' 
+                  : 'Latest Job Openings'}
+              </h2>
+              <p className="text-gray-600 mt-2">
+                {jobs.length} {jobs.length === 1 ? 'job' : 'jobs'} available
+              </p>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Find Jobs</h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Browse through thousands of job listings from top companies across various industries.
-            </p>
+            <Link
+              href="/jobs"
+              className="text-[#6C5DD3] hover:text-[#5B4BC2] font-medium flex items-center gap-2"
+            >
+              View All Jobs
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
           </div>
 
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 animate-slide-up" style={{animationDelay: '0.4s'}}>
-            <div className="bg-green-100 dark:bg-green-900/30 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
-              <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          {jobs.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-xl shadow-sm">
+              <svg className="w-20 h-20 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No jobs found</h3>
+              <p className="text-gray-600 mb-6">Try adjusting your search criteria</p>
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[#6C5DD3] hover:bg-[#5B4BC2] text-white rounded-lg transition-all duration-200"
+              >
+                Clear Search
+              </Link>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Easy Apply</h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Apply to jobs with a single click and track all your applications in one place.
-            </p>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {jobs.map((job: any, index: number) => (
+                <Link
+                  key={job.id}
+                  href={`/jobs/${job.id}`}
+                  className="bg-white rounded-xl shadow-sm p-6 hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-[#6C5DD3]/30 group animate-slide-up"
+                  style={{animationDelay: `${index * 0.1}s`}}
+                >
+                  {/* Company Logo */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#6C5DD3] to-[#8B7FE8] flex items-center justify-center text-white font-bold text-lg">
+                      {job.company[0]}
+                    </div>
+                    {session && (
+                      <StarButton 
+                        jobId={job.id} 
+                        initialStarred={starredJobIds.includes(job.id)}
+                      />
+                    )}
+                  </div>
 
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 animate-slide-up" style={{animationDelay: '0.5s'}}>
-            <div className="bg-purple-100 dark:bg-purple-900/30 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
-              <svg className="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
+                  {/* Job Info */}
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-[#6C5DD3] transition-colors">
+                    {job.title}
+                  </h3>
+                  <p className="text-gray-600 font-medium mb-4">{job.company}</p>
+
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-50 text-[#6C5DD3]">
+                      {job.type}
+                    </span>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                      📍 {job.location}
+                    </span>
+                  </div>
+
+                  {job.salary && (
+                    <p className="text-sm font-semibold text-gray-900 mb-4">
+                      {job.salary}
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <span className="text-xs text-gray-500">
+                      {formatDistanceToNow(new Date(job.postedAt), { addSuffix: true })}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {job._count.applications} applicants
+                    </span>
+                  </div>
+                </Link>
+              ))}
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Post Jobs</h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Employers can post job openings and connect with talented candidates easily.
-            </p>
-          </div>
+          )}
         </div>
 
         {/* Stats Section */}
-        <div className="mt-24 bg-white dark:bg-gray-900 rounded-2xl p-12 shadow-xl animate-slide-up" style={{animationDelay: '0.6s'}}>
+        <div className="mt-16 bg-white rounded-2xl p-12 shadow-xl animate-slide-up">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div>
-              <p className="text-5xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">1000+</p>
-              <p className="text-gray-600 dark:text-gray-400 text-lg">Active Jobs</p>
+              <p className="text-5xl font-bold text-[#6C5DD3] mb-2">1000+</p>
+              <p className="text-gray-600 text-lg">Active Jobs</p>
             </div>
             <div>
-              <p className="text-5xl font-bold text-green-600 dark:text-green-400 mb-2">500+</p>
-              <p className="text-gray-600 dark:text-gray-400 text-lg">Companies</p>
+              <p className="text-5xl font-bold text-green-600 mb-2">500+</p>
+              <p className="text-gray-600 text-lg">Companies</p>
             </div>
             <div>
-              <p className="text-5xl font-bold text-purple-600 dark:text-purple-400 mb-2">5000+</p>
-              <p className="text-gray-600 dark:text-gray-400 text-lg">Happy Users</p>
+              <p className="text-5xl font-bold text-purple-600 mb-2">5000+</p>
+              <p className="text-gray-600 text-lg">Happy Users</p>
             </div>
           </div>
         </div>

@@ -58,6 +58,7 @@ model User {
   session Session[]
   job Job[] @relation("PostedJobs")
   applications Application[]
+  starredJobs StarredJob[]
 }
 
 model Job {
@@ -73,6 +74,7 @@ model Job {
   postedBy User @relation("PostedJobs", fields:[postedById], references:[id])
   postedById String
   applications Application[]
+  starredBy StarredJob[]
 }
 
 model Application{
@@ -86,4 +88,16 @@ model Application{
   job Job @relation(fields:[jobId], references:[id])
 
   @@unique([jobId, userId])
+}
+
+model StarredJob {
+  id String @id @default(cuid())
+  userId String
+  jobId String
+  starredAt DateTime @default(now())
+
+  user User @relation(fields:[userId], references:[id], onDelete: Cascade)
+  job Job @relation(fields:[jobId], references:[id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
 }

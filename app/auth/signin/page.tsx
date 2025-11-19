@@ -38,11 +38,11 @@ export default function SignInPage() {
 
         <div className="mt-6 text-center text-sm text-gray-500">
           By signing in, you agree to our{" "}
-          <a href="#" className="text-indigo-600 hover:text-indigo-500">
+          <a href="#" className="text-[#6C5DD3] hover:text-[#5B4BC2]">
             Terms of Service
           </a>{" "}
           and{" "}
-          <a href="#" className="text-indigo-600 hover:text-indigo-500">
+          <a href="#" className="text-[#6C5DD3] hover:text-[#5B4BC2]">
             Privacy Policy
           </a>
         </div>
